@@ -7,10 +7,16 @@ use Spatie\Permission\Models\Permission;
 
 class PermissionController extends Controller
 {
+    private $permission;
+
+    public function __construct(Permission $permission)
+    {
+        $this->permission = $permission;
+    }
  
     public function index()
     {
-        $permissions = Permission::all();
+        $permissions = $this->permission->select('id', 'name')->get();
         return view('permissions.index', compact('permissions'));
     }
 
@@ -21,7 +27,7 @@ class PermissionController extends Controller
 
     public function store(Request $request)
     {
-        $permission = new Permission;
+        $permission = $this->permission;
         $permission->name = $request->name;
         $permission->save();
 
@@ -35,22 +41,22 @@ class PermissionController extends Controller
 
     public function edit($id)
     {
-        $permission = Permission::where('id',$id)-first();
+        $permission = $this->permission->where('id',$id)->first();
         return view('permissions.edit', compact('permission'));
     }
 
     public function update(Request $request, $id)
     {
-        $permission = Permission::where('id',$id)-first();
+        $permission = $this->permission->where('id',$id)->first();
         $permission->name = $request->name;
-        $permission->save();
+        $permission->update();
 
         return redirect()->route('permission.index');
     }
 
     public function destroy($id)
     {
-        $permission = Permission::where('id',$id)-first();
+        $permission = $this->permission->where('id',$id)->first();
         $permission->delete();
 
         return redirect()->route('permission.index');

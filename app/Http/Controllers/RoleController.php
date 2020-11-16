@@ -8,10 +8,17 @@ use Spatie\Permission\Models\Permission;
 
 class RoleController extends Controller
 {
+    private $roles;
+    private $permissions;
+
+    public function __construct(Role $roles, Permission $permissions) {
+        $this->roles = $roles;
+        $this->permissions = $permissions;
+    }
 
     public function index()
     {
-        $roles = Role::all();
+        $roles = $this->roles->all();
         return view('roles.index', compact('roles'));
     }
 
@@ -22,7 +29,7 @@ class RoleController extends Controller
 
     public function store(Request $request)
     {
-        $role = new Role;
+        $role = $this->roles;
         $role->name = $request->name;
         $role->save();
 
@@ -36,13 +43,13 @@ class RoleController extends Controller
 
     public function edit($id)
     {
-        $role = Role::where('id',$id)->first();
+        $role = $this->roles->where('id',$id)->first();
         return view('roles.edit', compact('role'));
     }
 
     public function update(Request $request, $id)
     {
-        $role = Role::where('id',$id)->first();
+        $role = $this->roles->where('id',$id)->first();
         $role->name = $request->name;
         $role->save();
 
@@ -51,7 +58,7 @@ class RoleController extends Controller
 
     public function destroy($id)
     {
-        $role = Role::where('id',$id)->first();
+        $role = $this->roles->where('id',$id)->first();
         $role->delete();
 
         return redirect()->route('role.index');
@@ -59,8 +66,8 @@ class RoleController extends Controller
 
     public function permissions($role) 
     {
-        $role = Role::where('id', $role)->first();
-        $permissions = Permission::all();
+        $role = $this->roles->where('id', $role)->first();
+        $permissions = $this->permissions->all();
 
         foreach($permissions as $permission)
         {
@@ -83,10 +90,10 @@ class RoleController extends Controller
        foreach($permissionsRequest as $key => $value)
        {
            //Recuperando os medelos de objetos 
-            $permissions[] = Permission::where('id',$key)->first();
+            $permissions[] = $this->permissions->where('id',$key)->first();
        }
        //Sobrescrevendo a variavél que vem via parametro da função
-       $role = Role::where('id',$role)->first();
+       $role = $this->roles->where('id',$role)->first();
 
        if(!empty($permissions))
        {

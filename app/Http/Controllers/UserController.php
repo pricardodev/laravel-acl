@@ -10,18 +10,19 @@ use Spatie\Permission\Models\Permission;
 class UserController extends Controller
 {
     private $users;
-    private $user;
+    private $roles;
+    
     private $rolesRequest;
 
-    public function __construct(){
-        $users = $this->users;
-        $user = $this->user;
+    public function __construct(User $users, Role $roles){
+        
+        $this->users = $users;
         $rolesRequest = $this->rolesRequest;
     }
    
     public function index()
     {
-        $users = User::all();
+        $users = $this->users->all();
         return view('users.index', compact('users'));
     }
 
@@ -32,7 +33,7 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
-        $user = new user;
+        $user = $this->users;
         $user->name = $request->name;
         $user->email = $request->email;
         $user->password = bcrypt($request->password);
@@ -50,13 +51,13 @@ class UserController extends Controller
 
     public function edit($id)
     {
-        $user = User::find($id);
+        $user = $this->users->find($id);
         return view('users.edit', compact('user'));
     }
 
     public function update(Request $request, $id)
     {
-        $user = User::find($id);
+        $user = $this->users->find($id);
         $user->name = $request->name;
         $user->email = $request->email;
 
@@ -73,7 +74,7 @@ class UserController extends Controller
 
     public function destroy($id)
     {
-        $user = User::find($id);
+        $user = $this->users->find($id);
         $user->delete();
 
         return redirect()->route('user.index');
@@ -81,8 +82,8 @@ class UserController extends Controller
 
     public function roles($user) 
     {
-        $user = User::where('id', $user)->first();
-        $roles = Role::all();
+        $user = $this->users->where('id', $user)->first();
+        $roles = $this->roles->all();
 
         foreach($roles as $role)
         {
@@ -106,10 +107,10 @@ class UserController extends Controller
        foreach($rolesRequest as $key => $value)
        {
            //Recuperando os medelos de objetos 
-            $roles[] = Role::where('id',$key)->first();
+            $roles[] = $this->roles->where('id',$key)->first();
        }
        //Sobrescrevendo a variavél que vem via parametro da função
-       $user = User::where('id',$user)->first();
+       $user = $this->users->where('id',$user)->first();
 
        if(!empty($roles))
        {
