@@ -18,7 +18,7 @@ class RoleController extends Controller
 
     public function index()
     {
-        $roles = $this->roles->all();
+        $roles = $this->roles->select('id', 'name')->orderBy('name', 'asc')->get();
         return view('roles.index', compact('roles'));
     }
 
@@ -27,18 +27,43 @@ class RoleController extends Controller
         return view('roles.create');
     }
 
+    // Validacao dos dados do formulário
+    private function validaForm($request) {
+        $validacao = $request->validate
+       ([
+           'name' => 'required|max:255'
+       ]);
+   }
+
     public function store(Request $request)
     {
-        $role = $this->roles;
-        $role->name = $request->name;
-        $role->save();
+        $this->validaForm($request);
+        // verifica se já existe registro no banco com mesmos dados do formulário, evitando duplicidade
+        $verifica_registro_duplicado = $this->roles->where(['name' => $request->name])->exists();
 
-        return redirect()->route('role.index');
-    }
+        if($verifica_registro_duplicado === true) {
 
-    public function show($id)
-    {
-        //
+            $notifications = array('message' => 'Registro ja existe na base de dados!', 'alert-type' => 'alert-warning');
+            return back()->with($notifications);
+
+        }else{
+    
+            $role = $this->roles;
+            $role->name = $request->name;
+
+            try {
+
+                $role->save();
+                $notifications = array('message' => 'Cadastro efetuado com sucesso!', 'alert-type' => 'alert-success');
+                return back()->with($notifications);
+
+            }catch(\Illuminate\Database\QueryException $e) {
+                $notifications = array('message' => 'Erro inesperado!', 'alert-type' => 'alert-danger');
+                return back()->with($notifications);
+            }
+    
+           
+        }
     }
 
     public function edit($id)
@@ -49,25 +74,71 @@ class RoleController extends Controller
 
     public function update(Request $request, $id)
     {
-        $role = $this->roles->where('id',$id)->first();
-        $role->name = $request->name;
-        $role->save();
+        $this->validaForm($request);
 
-        return redirect()->route('role.index');
+        // verifica se já existe registro no banco com mesmos dados do formulário, evitando duplicidade
+        $verifica_registro_duplicado = $this->roles->where(['name' => $request->name])->exists();
+
+        if($verifica_registro_duplicado === true) {
+
+            $notifications = array('message' => 'Registro ja existe na base de dados!', 'alert-type' => 'alert-warning');
+            return back()->with($notifications);
+
+        }else{
+
+            $role = $this->roles->where('id', $id)->first();
+
+            if($role === null)
+            {
+                $notifications = array('message' => 'Erro inesperado!', 'alert-type' => 'alert-danger');
+                return back()->with($notifications);
+            }
+
+            $role->name = $request->name;
+               
+            try {
+
+                $role->update();
+                $notifications = array('message' => 'Cadastro editado com sucesso!', 'alert-type' => 'alert-success');
+                return back()->with($notifications);
+
+            }catch(\Illuminate\Database\QueryException $e) {
+                $notifications = array('message' => 'Erro inesperado!', 'alert-type' => 'alert-danger');
+                return back()->with($notifications);
+            }
+
+        }
     }
 
     public function destroy($id)
     {
-        $role = $this->roles->where('id',$id)->first();
-        $role->delete();
+        $role = $this->roles->where('id', $id)->first();
 
-        return redirect()->route('role.index');
+        if($role === null)
+        {
+            $notifications = array('message' => 'Erro inesperado!', 'alert-type' => 'alert-danger');
+            return back()->with($notifications);
+        }
+
+        try
+        {
+            $role->delete();
+            $notifications = array('message' => 'Registro deletado com sucesso!', 'alert-type' => 'alert-success');
+            return back()->with($notifications);
+           
+        }catch(\Illuminate\Database\QueryException $e){
+
+            $notifications = array('message' => 'Erro ao deletar, Registro sendo utilizado pelo sistema!', 'alert-type' => 'alert-warning');
+            return back()->with($notifications);
+
+        }
+
     }
 
     public function permissions($role) 
     {
         $role = $this->roles->where('id', $role)->first();
-        $permissions = $this->permissions->all();
+        $permissions = $this->permissions->select('id', 'description', 'name')->orderBy('name', 'asc')->get();
 
         foreach($permissions as $permission)
         {
@@ -102,8 +173,9 @@ class RoleController extends Controller
        } else {
             $role->syncPermissions(null);
        }
-       //Recebendo role->id do modelo e não da string passada por parametro.
-       return redirect()->route('role.permissions', ['role' => $role->id]);
+     
+       $notifications = array('message' => 'Permissão sincronizada com sucesso!', 'alert-type' => 'alert-success');
+       return back()->with($notifications);
 
     }
 

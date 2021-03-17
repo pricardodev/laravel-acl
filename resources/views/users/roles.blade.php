@@ -10,14 +10,10 @@
                     <div class="card-body">
 
                         <a class="text-success" href="{{ route('user.index') }}">&leftarrow; Voltar para a listagem</a>
-
-                        @if($errors)
-                            @foreach($errors->all() as $error)
-                                <div class="alert alert-danger mt-4" role="alert">
-                                    {{ $error }}
-                                </div>
-                            @endforeach
-                        @endif
+                        
+                        @if(Session::has('message'))
+                                <div class="alert {{ Session::get('alert-type') }} message-alert">{{ Session::get('message') }}</div>
+                            @endif
 
                         <h2 class="mt-4">Perfis de: {{ $user->name }}</h2>
 

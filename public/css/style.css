@@ -1,0 +1,4 @@
+/* Seta cor nos asteriscos dos campos obrigatórios */
+.obrigatorio {
+    color: #ff0000;
+}
